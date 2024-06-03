@@ -1,3 +1,4 @@
+import os
 import subprocess
 import time
 import csv
@@ -42,15 +43,20 @@ def append_to_log(data, log_file):
 
 
 def main():
+
+    # Create output folder if needed
+    os.makedirs("output", exist_ok=True)
+    log_file = "output/"
+
     # Ask the user for the desired CSV filename
-    log_file = input(
+    log_file += input(
         "Enter the desired filename for the CSV log (without .csv extension): "
     )
 
     # Append some identification info to filename
-    current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    current_time = datetime.now().strftime("_%Y-%m-%d-%H-%M-%S")
 
-    log_file += "-speedTest-" + current_time + ".csv"
+    log_file += current_time + ".csv"
 
     # Set up signal handler for graceful termination
     signal.signal(signal.SIGINT, signal_handler)
