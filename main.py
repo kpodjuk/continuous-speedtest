@@ -1,11 +1,10 @@
-import speedtest
+import subprocess
 import time
-import json
+import csv
 import signal
 import sys
-
-# Define the log file path
-LOG_FILE = "speedtest_log.json"
+import json
+from datetime import datetime
 
 
 def signal_handler(sig, frame):
@@ -14,18 +13,45 @@ def signal_handler(sig, frame):
 
 
 def run_speedtest():
-    st = speedtest.Speedtest()
-    st.download()
-    st.upload()
-    return st.results.dict()
+    try:
+        result = subprocess.run(
+            ["speedtest-cli", "--json"], capture_output=True, text=True, check=True
+        )
+        return json.loads(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while running speedtest-cli: {e}")
+        return None
 
 
-def append_to_log(data):
-    with open(LOG_FILE, "a") as log_file:
-        log_file.write(json.dumps(data) + "\n")
+def append_to_log(data, log_file):
+    if data:
+        fieldnames = ["timestamp", "download", "upload", "ping", "server"]
+        with open(log_file, "a", newline="") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if csvfile.tell() == 0:
+                writer.writeheader()
+            writer.writerow(
+                {
+                    "timestamp": data["timestamp"],
+                    "download": data["download"] / 1e6,  # Convert from bps to Mbps
+                    "upload": data["upload"] / 1e6,  # Convert from bps to Mbps
+                    "ping": data["ping"],
+                    "server": data["server"]["host"],
+                }
+            )
 
 
 def main():
+    # Ask the user for the desired CSV filename
+    log_file = input(
+        "Enter the desired filename for the CSV log (without .csv extension): "
+    )
+
+    # Append some identification info to filename
+    current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+    log_file += "-speedTest-" + current_time + ".csv"
+
     # Set up signal handler for graceful termination
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -33,15 +59,18 @@ def main():
     print("Starting continuous speed tests. Press Ctrl+C to stop.")
 
     while True:
-        try:
-            result = run_speedtest()
-            append_to_log(result)
-            print(f"Logged result: {result['timestamp']}")
-            # Wait for a specified interval before the next test (e.g., 1 hour)
-            time.sleep(1)
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            time.sleep(60)  # Retry after 1 minute if an error occurs
+        result = run_speedtest()
+        if result:
+            append_to_log(result, log_file)
+            print(
+                f"Logged result: {result['timestamp']}, Download: {result['download']/1e6:.2f} Mbps, Upload: {result['upload']/1e6:.2f} Mbps, Ping: {result['ping']} ms"
+            )
+        else:
+            print("Retrying in 1 minute due to error.")
+            time.sleep(60)  # Wait for 1 minute before retrying
+
+        # Wait for a specified interval before the next test
+        time.sleep(1)
 
 
 if __name__ == "__main__":
