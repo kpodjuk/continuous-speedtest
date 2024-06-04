@@ -3,11 +3,17 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
+import argparse
+
+
+# Set up argument parser
+parser = argparse.ArgumentParser(description="Plot speedtest data from a CSV file.")
+parser.add_argument("filename", type=str, help="The CSV file to plot")
+args = parser.parse_args()
 
 # Load the CSV file
-filename = "output\haiiii example tes name uwu_2024-06-03-23-30-16.csv"
-
-
+filename = args.filename
+print("Plotting: " + filename)
 df = pd.read_csv(filename)
 
 # Convert timestamp column to datetime
@@ -35,7 +41,7 @@ sns.lineplot(
 # Add titles and labels
 plt.title(f"{test_name} - Test conducted at {timestamp}", fontsize=16)
 plt.xlabel("Timestamp")
-plt.ylabel("Values")
+plt.ylabel("Values [Mbs]")
 plt.legend()
 
 # Enable zooming with scroll wheel
