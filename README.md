@@ -11,6 +11,6 @@ Install requirements, run the script.
 
 ```
 pip install speedtest-cli
-Note: You need python packages added to PATH
+Note: You need speedtest-cli added to PATH variable
 python main.py
 ```

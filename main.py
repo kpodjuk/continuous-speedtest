@@ -6,7 +6,7 @@ import signal
 import sys
 import json
 from datetime import datetime
-
+import pytz
 
 def signal_handler(sig, frame):
     print("Exiting the script.")
@@ -25,6 +25,7 @@ def run_speedtest():
 
 
 def append_to_log(data, log_file):
+    # print(data)
     if data:
         fieldnames = ["timestamp", "download", "upload", "ping", "server"]
         with open(log_file, "a", newline="") as csvfile:
@@ -42,21 +43,56 @@ def append_to_log(data, log_file):
             )
 
 
+def list_files(directory):
+    files = os.listdir(directory)
+    files = [f for f in files if os.path.isfile(os.path.join(directory, f))]
+    return files
+
+
 def main():
 
-    # Create output folder if needed
+    # Create output folder
     os.makedirs("output", exist_ok=True)
-    log_file = "output/"
 
-    # Ask the user for the desired CSV filename
-    log_file += input(
-        "Enter the desired filename for the CSV log (without .csv extension): "
+    log_file = ""
+    # Ask the user for the desired CSV filename or 'p' to plot data
+    user_input = input(
+        "Enter the desired filename for the CSV log (without .csv extension), enter 'p' if you want to plot recorded data: "
     )
 
-    # Append some identification info to filename
+    if user_input.lower() == "p":
+        files = list_files("output")
+        if not files:
+            print("No files found in the 'output' directory.")
+            return
+
+        print("Select a file to plot:")
+        for i, filename in enumerate(files, start=1):
+            print(f"{i} - {filename}")
+
+        file_index = int(input("Enter the number corresponding to the file: ")) - 1
+        if 0 <= file_index < len(files):
+            selected_file = files[file_index]
+            plot_script = "plot.py"
+
+            # add .venv for plot.py execution
+            venv_python = os.path.join(".venv", "Scripts", "python")
+
+            subprocess.run(
+                [venv_python, plot_script, os.path.join("output", selected_file)]
+            )
+
+        else:
+            print("Invalid selection.")
+        return
+
+    log_file += user_input
+
+    # Append timestamp filename
     current_time = datetime.now().strftime("_%Y-%m-%d-%H-%M-%S")
 
     log_file += current_time + ".csv"
+    log_file = os.path.join("output", log_file)
 
     # Set up signal handler for graceful termination
     signal.signal(signal.SIGINT, signal_handler)
@@ -73,6 +109,14 @@ def main():
             )
         else:
             print("Retrying in 1 minute due to error.")
+
+            # add 0s to csv so it's clear on the plot when speedtest failed
+            current_timestamp = (
+                datetime.now(pytz.utc).isoformat(timespec="microseconds") + "Z"
+            )
+            csv_line = f"{current_timestamp},0,0,0,0"
+            with open(log_file, "a") as file:
+                file.write(csv_line + "\n")
             time.sleep(60)  # Wait for 1 minute before retrying
 
         # Wait for a specified interval before the next test
