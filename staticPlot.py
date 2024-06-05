@@ -41,7 +41,7 @@ sns.lineplot(
 # Add titles and labels
 plt.title(f"{test_name} - Test conducted at {timestamp}", fontsize=16)
 plt.xlabel("Timestamp")
-plt.ylabel("Values")
+plt.ylabel("Values [Mbs]")
 plt.legend()
 
 # Enable zooming with scroll wheel

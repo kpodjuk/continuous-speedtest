@@ -3,3 +3,5 @@ matplotlib
 seaborn
 mplcursors
 pytz
+watchdog
+plotly
