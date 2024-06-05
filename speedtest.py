@@ -7,11 +7,20 @@ import sys
 import json
 from datetime import datetime, timezone
 import pytz
+import argparse
+
 
 # Use the .venv path for python interpreter
 venv_python = os.path.join(
     ".venv", "bin", "python" if os.name != "nt" else "Scripts\\python"
 )
+
+# Set up argument parser
+parser = argparse.ArgumentParser(
+    description="Perform speedtests and save result in .csv"
+)
+parser.add_argument("filename", type=str, help="The CSV file to output to")
+args = parser.parse_args()
 
 
 def signal_handler(sig, frame):
@@ -68,37 +77,34 @@ def main():
 
     log_file = ""
     # Ask the user for the desired CSV filename or 'p' to plot data
-    user_input = input(
-        "Enter the desired filename for the CSV log (without .csv extension), enter 'p' if you want to plot recorded data: "
-    )
+    # user_input = input(
+    #     "Enter the desired filename for the CSV log (without .csv extension), enter 'p' if you want to plot recorded data: "
+    # )
 
-    if user_input.lower() == "p":
-        files = list_files("output")
-        if not files:
-            print("No files found in the 'output' directory.")
-            return
+    # if user_input.lower() == "p":
+    #     files = list_files("output")
+    #     if not files:
+    #         print("No files found in the 'output' directory.")
+    #         return
 
-        print("Select a file to plot:")
-        for i, filename in enumerate(files, start=1):
-            print(f"{i} - {filename}")
+    #     print("Select a file to plot:")
+    #     for i, filename in enumerate(files, start=1):
+    #         print(f"{i} - {filename}")
 
-        file_index = int(input("Enter the number corresponding to the file: ")) - 1
-        if 0 <= file_index < len(files):
-            selected_file = files[file_index]
-            plot_script = "plot.py"
+    #     file_index = int(input("Enter the number corresponding to the file: ")) - 1
+    #     if 0 <= file_index < len(files):
+    #         selected_file = files[file_index]
+    #         plot_script = "plot.py"
 
-            # add .venv for plot.py execution
-            venv_python = os.path.join(".venv", "Scripts", "python")
+    #         subprocess.run(
+    #             [venv_python, plot_script, os.path.join("output", selected_file)]
+    #         )
 
-            subprocess.run(
-                [venv_python, plot_script, os.path.join("output", selected_file)]
-            )
+    #     else:
+    #         print("Invalid selection.")
+    #     return
 
-        else:
-            print("Invalid selection.")
-        return
-
-    log_file += user_input
+    log_file += args.filename
 
     # Append timestamp and .csv to filename
     log_file += datetime.now().strftime("_%Y-%m-%d-%H-%M-%S") + ".csv"

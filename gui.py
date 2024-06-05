@@ -1,5 +1,46 @@
 import tkinter as tk
 from tkinter import ttk
+import subprocess
+
+# Global variable to keep track of the speedtest subprocess
+speedtest_process = None
+
+
+def start_speedtest(filename):
+    global speedtest_process
+    speedtest_process = subprocess.Popen(["python", "speedtest.py", filename])
+    print(f"Speed test started with filename: {filename}")
+
+
+def stop_speedtest():
+    global speedtest_process
+    if speedtest_process:
+        speedtest_process.terminate()
+        speedtest_process = None
+        print("Speed test stopped")
+
+
+def update_start_button_state(*args):
+    # Enable the start button only if the filename entry is not empty
+    if filename_var.get():
+        start_button.state(["!disabled"])
+    else:
+        start_button.state(["disabled"])
+
+
+def on_start_pressed():
+    filename = filename_var.get()
+    start_speedtest(filename)
+    stop_button.state(["!disabled"])
+    start_button.state(["disabled"])
+    filename_entry.state(["disabled"])
+
+
+def on_stop_pressed():
+    stop_speedtest()
+    stop_button.state(["disabled"])
+    filename_entry.state(["!disabled"])
+    update_start_button_state()
 
 
 def create_gui():
@@ -16,24 +57,27 @@ def create_gui():
     filename_label.grid(row=0, column=0, sticky=tk.W)
 
     # Add the text field
-    filename_entry = ttk.Entry(top_frame, width=50)
+    global filename_var, filename_entry
+    filename_var = tk.StringVar()
+    filename_entry = ttk.Entry(top_frame, width=50, textvariable=filename_var)
     filename_entry.grid(row=0, column=1, sticky=(tk.W, tk.E))
+    filename_var.trace_add("write", update_start_button_state)
 
     # Create a frame for the buttons
     button_frame = ttk.Frame(root, padding="10 10 10 10")
     button_frame.grid(row=1, column=0, sticky=(tk.W, tk.E))
 
     # Add the start button
-    start_button = ttk.Button(
-        button_frame, text="Start", command=lambda: print("Start button clicked")
-    )
+    global start_button
+    start_button = ttk.Button(button_frame, text="Start", command=on_start_pressed)
     start_button.grid(row=0, column=0, padx=5, pady=5)
+    start_button.state(["disabled"])
 
     # Add the stop button
-    stop_button = ttk.Button(
-        button_frame, text="Stop", command=lambda: print("Stop button clicked")
-    )
+    global stop_button
+    stop_button = ttk.Button(button_frame, text="Stop", command=on_stop_pressed)
     stop_button.grid(row=0, column=1, padx=5, pady=5)
+    stop_button.state(["disabled"])
 
     # Add padding around all the widgets
     for child in top_frame.winfo_children():
