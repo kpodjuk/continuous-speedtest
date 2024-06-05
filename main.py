@@ -6,8 +6,12 @@ import signal
 import sys
 import json
 from datetime import datetime, timezone
-
 import pytz
+
+# Use the .venv path for python interpreter
+venv_python = os.path.join(
+    ".venv", "bin", "python" if os.name != "nt" else "Scripts\\python"
+)
 
 
 def signal_handler(sig, frame):
@@ -17,8 +21,14 @@ def signal_handler(sig, frame):
 
 def run_speedtest():
     try:
+        # Determine the path based on the OS
+        if os.name == "nt":  # Windows
+            venv_path = os.path.join(".venv", "Scripts", "speedtest-cli.exe")
+        else:  # Unix-like
+            venv_path = os.path.join(".venv", "bin", "speedtest-cli")
+
         result = subprocess.run(
-            ["speedtest-cli", "--json"], capture_output=True, text=True, check=True
+            [venv_path, "--json"], capture_output=True, text=True, check=True
         )
         return json.loads(result.stdout)
     except subprocess.CalledProcessError as e:
