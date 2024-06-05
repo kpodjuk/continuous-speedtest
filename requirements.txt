@@ -4,3 +4,4 @@ seaborn
 mplcursors
 pytz
 watchdog
+plotly
