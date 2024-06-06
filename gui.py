@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 import subprocess
+import os
+import sys
 
 # Global variable to keep track of the speedtest subprocess
 speedtest_process = None
@@ -8,7 +10,9 @@ speedtest_process = None
 
 def start_speedtest(filename):
     global speedtest_process
-    speedtest_process = subprocess.Popen(["python", "speedtest.py", filename])
+    # Get the path to the current Python executable (which should be from the virtual environment)
+    python_executable = sys.executable
+    speedtest_process = subprocess.Popen([python_executable, "speedtest.py", filename])
     print(f"Speed test started with filename: {filename}")
 
 
