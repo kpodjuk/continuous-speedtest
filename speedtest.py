@@ -6,7 +6,6 @@ import signal
 import sys
 import json
 from datetime import datetime, timezone
-import pytz
 import argparse
 
 
@@ -181,7 +180,7 @@ def main():
             data["download"] = 0
             data["upload"] = 0
             data["ping"] = 0
-            data["server"]["host"] = ""
+            data["server"]["host"] = 0
             data["ssid"] = 0
             data["signalStrength"] = 0
             append_to_log(data, log_file)

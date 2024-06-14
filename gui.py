@@ -5,12 +5,10 @@ import subprocess
 # Global variable to keep track of the speedtest subprocess
 speedtest_process = None
 
-
 def start_speedtest(filename):
     global speedtest_process
-    speedtest_process = subprocess.Popen(["python", "speedtest.py", filename])
+    speedtest_process = subprocess.Popen(["cmd.exe", "/c", "python", "speedtest.py", filename])
     print(f"Speed test started with filename: {filename}")
-
 
 def stop_speedtest():
     global speedtest_process
@@ -19,7 +17,6 @@ def stop_speedtest():
         speedtest_process = None
         print("Speed test stopped")
 
-
 def update_start_button_state(*args):
     # Enable the start button only if the filename entry is not empty
     if filename_var.get():
@@ -27,14 +24,12 @@ def update_start_button_state(*args):
     else:
         start_button.state(["disabled"])
 
-
-def on_start_pressed():
+def on_start_pressed(event=None):
     filename = filename_var.get()
     start_speedtest(filename)
     stop_button.state(["!disabled"])
     start_button.state(["disabled"])
     filename_entry.state(["disabled"])
-
 
 def on_stop_pressed():
     stop_speedtest()
@@ -42,11 +37,10 @@ def on_stop_pressed():
     filename_entry.state(["!disabled"])
     update_start_button_state()
 
-
 def create_gui():
     # Create the main window
     root = tk.Tk()
-    root.title("Continous speedtest")
+    root.title("Continuous Speedtest")
 
     # Create a frame for the top section
     top_frame = ttk.Frame(root, padding="10 10 10 10")
@@ -62,6 +56,9 @@ def create_gui():
     filename_entry = ttk.Entry(top_frame, width=50, textvariable=filename_var)
     filename_entry.grid(row=0, column=1, sticky=(tk.W, tk.E))
     filename_var.trace_add("write", update_start_button_state)
+
+    # Bind Enter key to start speedtest when filename entry is focused
+    filename_entry.bind("<Return>", on_start_pressed)
 
     # Create a frame for the buttons
     button_frame = ttk.Frame(root, padding="10 10 10 10")
@@ -92,7 +89,6 @@ def create_gui():
 
     # Start the GUI event loop
     root.mainloop()
-
 
 if __name__ == "__main__":
     create_gui()

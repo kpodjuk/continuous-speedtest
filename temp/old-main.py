@@ -6,7 +6,6 @@ import signal
 import sys
 import json
 from datetime import datetime
-import pytz
 
 def signal_handler(sig, frame):
     print("Exiting the script.")
