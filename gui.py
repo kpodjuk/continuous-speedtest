@@ -46,7 +46,7 @@ def on_stop_pressed():
 def create_gui():
     # Create the main window
     root = tk.Tk()
-    root.title("Simple GUI")
+    root.title("Continous speedtest")
 
     # Create a frame for the top section
     top_frame = ttk.Frame(root, padding="10 10 10 10")

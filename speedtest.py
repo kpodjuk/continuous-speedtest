@@ -48,7 +48,15 @@ def run_speedtest():
 def append_to_log(data, log_file):
     # print(data)
     if data:
-        fieldnames = ["timestamp", "download", "upload", "ping", "server"]
+        fieldnames = [
+            "timestamp",
+            "download",
+            "upload",
+            "ping",
+            "server",
+            "ssid",
+            "signalStrength",
+        ]
         with open(log_file, "a", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if csvfile.tell() == 0:
@@ -60,6 +68,8 @@ def append_to_log(data, log_file):
                     "upload": data["upload"] / 1e6,  # Convert from bps to Mbps
                     "ping": data["ping"],
                     "server": data["server"]["host"],
+                    "ssid": data["ssid"],
+                    "signalStrength": data["signalStrength"],
                 }
             )
 
@@ -68,6 +78,34 @@ def list_files(directory):
     files = os.listdir(directory)
     files = [f for f in files if os.path.isfile(os.path.join(directory, f))]
     return files
+
+
+def get_wifi_ssid():
+    # Run the command to get the current network details
+    netsh_output = subprocess.check_output(
+        "netsh wlan show interfaces", shell=True
+    ).decode("utf-8", errors="ignore")
+
+    # Find the SSID in the command output
+    for line in netsh_output.split("\n"):
+        if "SSID" in line and "BSSID" not in line:
+            ssid = line.split(":")[1].strip()
+            return ssid
+    return "0"
+
+
+def get_wifi_signal_strength():
+    # Run the command to get the current network details
+    netsh_output = subprocess.check_output(
+        "netsh wlan show interfaces", shell=True
+    ).decode("utf-8", errors="ignore")
+
+    # Find the Signal strength in the command output
+    for line in netsh_output.split("\n"):
+        if "Signal" in line:
+            signal_strength = line.split(":")[1].strip().replace("%", "")
+            return signal_strength
+    return "0"
 
 
 def main():
@@ -126,10 +164,12 @@ def main():
         if result:
             # Replace speedtest timestamp with our own so timezone is correct
             result["timestamp"] = current_timestamp
-
+            # add wifi signal info
+            result["ssid"] = get_wifi_ssid()
+            result["signalStrength"] = get_wifi_signal_strength()
             append_to_log(result, log_file)
             print(
-                f"Logged result: {current_timestamp}, Download: {result['download']/1e6:.2f} Mbps, Upload: {result['upload']/1e6:.2f} Mbps, Ping: {result['ping']} ms"
+                f"Logged result: {current_timestamp}, Download: {result['download']/1e6:.2f} Mbps, Upload: {result['upload']/1e6:.2f} Mbps, Ping: {result['ping']} ms, SSID: {result['ssid']}, signalStrength: {result['signalStrength']}"
             )
         else:
             print("Retrying in 1 minute due to error.")
@@ -142,6 +182,8 @@ def main():
             data["upload"] = 0
             data["ping"] = 0
             data["server"]["host"] = ""
+            data["ssid"] = 0
+            data["signalStrength"] = 0
             append_to_log(data, log_file)
 
             time.sleep(60)  # Wait for 1 minute before retrying
